@@ -1,4 +1,9 @@
-FROM arm32v7/node:6
+ARG ARCH
+FROM $ARCH/node:alpine
+
+ARG QEMU_ARCH
+COPY qemu-$QEMU_ARCH-static /usr/bin
+
 MAINTAINER St. John Johnson <st.john.johnson@gmail.com> and Jeremiah Wuenschel <jeremiah.wuenschel@gmail.com>
 
 # Create our application direcory

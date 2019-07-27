@@ -1,0 +1,48 @@
+language: node_js
+dist: bionic
+
+services:
+  - docker
+
+branches:
+  only:
+    - master
+
+env:
+  - DOCKERFILE=Dockerfile DOCKER_ARCH=amd64
+  - DOCKERFILE=Dockerfile.multiarch DOCKER_ARCH=arm32v6 QEMU_ARCH=arm
+  - DOCKERFILE=Dockerfile.multiarch DOCKER_ARCH=arm64v8 QEMU_ARCH=aarch64
+
+before_install:
+  - |-
+    if [ -n "$QEMU_ARCH" ]; then
+      curl -L https://github.com/balena-io/qemu/releases/download/v3.0.0%2Bresin/qemu-3.0.0+resin-$QEMU_ARCH.tar.gz | tar -xz \
+        && mv qemu-3.0.0+resin-$QEMU_ARCH/qemu-$QEMU_ARCH-static . \
+        && rm -fr qemu-3.0.0+resin-$QEMU_ARCH
+    fi
+
+install:
+  - echo "$DOCKER_PASSWORD" | docker login -u "$DOCKER_USERNAME" --password-stdin
+  - docker run --rm --privileged multiarch/qemu-user-static:register --reset
+  - docker build --build-arg ARCH=$DOCKER_ARCH --build-arg QEMU_ARCH=$QEMU_ARCH -f $DOCKERFILE -t $TRAVIS_REPO_SLUG:latest-$DOCKER_ARCH .
+  - docker push $TRAVIS_REPO_SLUG:latest-$DOCKER_ARCH
+
+script: skip
+
+jobs:
+  include:
+    - stage: manifest
+      env:
+        - DOCKER_CLI_EXPERIMENTAL=enabled
+      install:
+        - echo "$DOCKER_PASSWORD" | docker login -u "$DOCKER_USERNAME" --password-stdin
+        - |-
+          docker manifest create $TRAVIS_REPO_SLUG:latest \
+            $TRAVIS_REPO_SLUG:latest-amd64 \
+            $TRAVIS_REPO_SLUG:latest-arm32v6 \
+            $TRAVIS_REPO_SLUG:latest-arm64v8
+        - docker manifest annotate $TRAVIS_REPO_SLUG:latest $TRAVIS_REPO_SLUG:latest-amd64 --os linux --arch amd64
+        - docker manifest annotate $TRAVIS_REPO_SLUG:latest $TRAVIS_REPO_SLUG:latest-arm32v6 --os linux --arch arm --variant v6
+        - docker manifest annotate $TRAVIS_REPO_SLUG:latest $TRAVIS_REPO_SLUG:latest-arm64v8 --os linux --arch arm64 --variant v8
+        - docker manifest push $TRAVIS_REPO_SLUG:latest
+      script: skip

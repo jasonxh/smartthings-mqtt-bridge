@@ -1,3 +1,11 @@
+# About This Fork
+[![Build Status](https://travis-ci.org/jasonxh/smartthings-mqtt-bridge.svg?branch=master)](https://travis-ci.org/jasonxh/smartthings-mqtt-bridge)
+
+This fork is intended to merely setup automated docker builds for multiple architectures (`amd64`, `arm32v6`, `arm64v8`).
+The resulting multiarch manifest is published to [docker hub](https://hub.docker.com/r/jasonxh/smartthings-mqtt-bridge) under name `jasonxh/smartthings-mqtt-bridge`.
+
+At this time, there is no planned code change from upstream.
+
 # SmartThings MQTT Bridge
 ***System to share and control SmartThings device states in MQTT.***
 

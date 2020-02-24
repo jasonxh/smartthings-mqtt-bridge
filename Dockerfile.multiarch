@@ -1,8 +1,17 @@
 ARG ARCH
-FROM $ARCH/node:alpine
 
+FROM bash AS builder
 ARG QEMU_ARCH
-COPY qemu-$QEMU_ARCH-static /usr/bin
+
+WORKDIR /qemu
+RUN wget -O- https://github.com/balena-io/qemu/releases/download/v3.0.0%2Bresin/qemu-3.0.0+resin-$QEMU_ARCH.tar.gz | tar -xz \
+ && mv qemu-3.0.0+resin-$QEMU_ARCH/qemu-$QEMU_ARCH-static . \
+ && rm -fr qemu-3.0.0+resin-$QEMU_ARCH
+
+
+FROM $ARCH/node:alpine
+ARG QEMU_ARCH
+COPY --from=builder /qemu/qemu-$QEMU_ARCH-static /usr/bin/
 
 MAINTAINER St. John Johnson <st.john.johnson@gmail.com> and Jeremiah Wuenschel <jeremiah.wuenschel@gmail.com>
 

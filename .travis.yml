@@ -1,4 +1,4 @@
-language: node_js
+language: minimal
 dist: bionic
 
 services:
@@ -9,15 +9,15 @@ branches:
   - master
 
 env:
-- DOCKERFILE=Dockerfile DOCKER_ARCH=amd64
-- DOCKERFILE=Dockerfile.multiarch DOCKER_ARCH=arm32v6 QEMU_ARCH=arm
-- DOCKERFILE=Dockerfile.multiarch DOCKER_ARCH=arm64v8 QEMU_ARCH=aarch64
+- ARCH=amd64
+- ARCH=arm32v6
+- ARCH=arm64v8
 
 install:
 - echo "$DOCKER_PASSWORD" | docker login -u "$DOCKER_USERNAME" --password-stdin
-- docker run --rm --privileged multiarch/qemu-user-static:register --reset
-- docker build --build-arg ARCH=$DOCKER_ARCH --build-arg QEMU_ARCH=$QEMU_ARCH -f $DOCKERFILE -t $TRAVIS_REPO_SLUG:latest-$DOCKER_ARCH .
-- '[ "$TRAVIS_EVENT_TYPE" != push ] || docker push $TRAVIS_REPO_SLUG:latest-$DOCKER_ARCH'
+- docker run --rm --privileged multiarch/qemu-user-static --reset -p yes
+- docker build --build-arg ARCH=$ARCH -f Dockerfile.multiarch -t $TRAVIS_REPO_SLUG:latest-$ARCH .
+- '[ "$TRAVIS_EVENT_TYPE" != push ] || docker push $TRAVIS_REPO_SLUG:latest-$ARCH'
 
 script: skip
 
